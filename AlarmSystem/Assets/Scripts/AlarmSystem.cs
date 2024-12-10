@@ -6,53 +6,88 @@ public class AlarmSystem : MonoBehaviour
 {
     [SerializeField] private AudioSource _audio;
     [SerializeField] private float _timeOfTransition;
+    [SerializeField] private DistanceDetector _distanceDetector;
 
-    private int targetValue = 0;
+    private int _targetVolume = 0;
     private bool _wasPreviousCheckSuccessful = false;
+    private bool _isCloseCrook = false;
+
+    private void Start()
+    {
+        _audio.volume = 0;
+    }
+
+    private void OnEnable()
+    {
+        _distanceDetector.CrookBeenFound += Player;
+    }
+    private void OnDisable()
+    {
+        _distanceDetector.CrookBeenFound -= Player;
+    }
 
     private void Update()
     {
-        RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, Vector2.down);
-        bool Iscrook = false;
-        
-        foreach (RaycastHit2D hit in hits) 
+        if (_isCloseCrook == true) 
         {
-            if (hit.collider.gameObject.TryGetComponent(out Crook crook)) 
+            RaycastHit2D[] raycastHits = Physics2D.RaycastAll(transform.position, Vector2.down);
+            bool Iscrook = false;
+
+            foreach (RaycastHit2D hit in raycastHits)
             {
-                Iscrook = true;
-
-                if (_wasPreviousCheckSuccessful == false)
+                if (hit.collider.gameObject.TryGetComponent(out Crook crook))
                 {
-                    targetValue--;
-                    targetValue = Mathf.Abs(targetValue);
+                    Iscrook = true;
 
-                    StartCoroutine(nameof(SmoothVolumeIncrease));
-                    _wasPreviousCheckSuccessful = true;
+                    if (_wasPreviousCheckSuccessful == false)
+                    {
+                        _targetVolume--;
+                        _targetVolume = Mathf.Abs(_targetVolume);
+
+                        StartCoroutine(nameof(SmoothVolumeIncrease));
+                        _wasPreviousCheckSuccessful = true;
+                    }
                 }
             }
-        }
 
-        if (Iscrook == false) 
-        {
-            _wasPreviousCheckSuccessful = false;
+            if (Iscrook == false)
+            {
+                _wasPreviousCheckSuccessful = false;
+            }
         }
     }
 
     private IEnumerator SmoothVolumeIncrease()
     {
-        _audio.Play();
-
         float elapsedTime = 0f;
         float startVolume = _audio.volume;
 
-        while (_audio.volume != targetValue)
+        while (_audio.volume != _targetVolume)
         {
             float normalizedPosition = elapsedTime / _timeOfTransition;
 
             elapsedTime += Time.deltaTime;
-            _audio.volume = Mathf.Lerp(startVolume, targetValue, normalizedPosition);
+            _audio.volume = Mathf.Lerp(startVolume, _targetVolume, normalizedPosition);
 
             yield return null;
+        }
+    }
+
+    private void Player(bool isThereCrook)
+    {
+        if (isThereCrook == true)
+        {
+            _isCloseCrook = true;
+
+            if (_audio.isPlaying == false) 
+            {
+                _audio.Play();
+            }
+        }
+        else 
+        {
+            _isCloseCrook = false;
+            _audio.Stop();
         }
     }
 }
