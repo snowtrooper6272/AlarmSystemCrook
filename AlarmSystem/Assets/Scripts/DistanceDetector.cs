@@ -7,22 +7,19 @@ public class DistanceDetector : MonoBehaviour
 {
     public event UnityAction<bool> CrookBeenFound;
 
-    [SerializeField] private float _distance;
-
-
-    private void Update()
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        Collider2D[] zoneHits = Physics2D.OverlapCircleAll(transform.position, _distance);
-        bool isCrookFind = false;
-
-        foreach (Collider2D hit in zoneHits)
+        if (collision.gameObject.TryGetComponent(out Crook crook) == true)
         {
-            if (hit.TryGetComponent(out Crook crook) == true)
-            {
-                isCrookFind = true;
-            }
+            CrookBeenFound.Invoke(true);
         }
+    }
 
-        CrookBeenFound.Invoke(isCrookFind);
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.gameObject.TryGetComponent(out Crook crook) == true)
+        {
+            CrookBeenFound.Invoke(false);
+        }
     }
 }

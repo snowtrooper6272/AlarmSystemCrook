@@ -19,38 +19,29 @@ public class AlarmSystem : MonoBehaviour
 
     private void OnEnable()
     {
-        _distanceDetector.CrookBeenFound += Player;
+        _distanceDetector.CrookBeenFound += ToggleSound;
     }
     private void OnDisable()
     {
-        _distanceDetector.CrookBeenFound -= Player;
+        _distanceDetector.CrookBeenFound -= ToggleSound;
     }
 
     private void Update()
     {
         if (_isCloseCrook == true) 
         {
-            RaycastHit2D[] raycastHits = Physics2D.RaycastAll(transform.position, Vector2.down);
-            bool Iscrook = false;
-
-            foreach (RaycastHit2D hit in raycastHits)
+            if (FindCrook() == true)
             {
-                if (hit.collider.gameObject.TryGetComponent(out Crook crook))
+                if (_wasPreviousCheckSuccessful == false)
                 {
-                    Iscrook = true;
+                    _targetVolume--;
+                    _targetVolume = Mathf.Abs(_targetVolume);
 
-                    if (_wasPreviousCheckSuccessful == false)
-                    {
-                        _targetVolume--;
-                        _targetVolume = Mathf.Abs(_targetVolume);
-
-                        StartCoroutine(nameof(SmoothVolumeIncrease));
-                        _wasPreviousCheckSuccessful = true;
-                    }
+                    StartCoroutine(nameof(SmoothVolumeIncrease));
+                    _wasPreviousCheckSuccessful = true;
                 }
             }
-
-            if (Iscrook == false)
+            else 
             {
                 _wasPreviousCheckSuccessful = false;
             }
@@ -73,21 +64,33 @@ public class AlarmSystem : MonoBehaviour
         }
     }
 
-    private void Player(bool isThereCrook)
+    private void ToggleSound(bool isThereCrook)
     {
         if (isThereCrook == true)
         {
             _isCloseCrook = true;
 
-            if (_audio.isPlaying == false) 
-            {
-                _audio.Play();
-            }
+            _audio.Play();
         }
         else 
         {
-            _isCloseCrook = false;
+            _isCloseCrook = false;                 
             _audio.Stop();
         }
+    }
+
+    private bool FindCrook()
+    {
+        RaycastHit2D[] raycastHits = Physics2D.RaycastAll(transform.position, Vector2.down);
+
+        foreach (RaycastHit2D hit in raycastHits)
+        {
+            if (hit.collider.gameObject.TryGetComponent(out Crook crook))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
