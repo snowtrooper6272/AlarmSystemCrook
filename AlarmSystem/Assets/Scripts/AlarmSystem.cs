@@ -8,7 +8,6 @@ public class AlarmSystem : MonoBehaviour
     [SerializeField] private float _timeOfTransition;
     [SerializeField] private DistanceDetector _distanceDetector;
 
-    private int _targetVolume = 0;
     private bool _wasPreviousCheckSuccessful = false;
     private bool _isCloseCrook = false;
 
@@ -34,10 +33,16 @@ public class AlarmSystem : MonoBehaviour
             {
                 if (_wasPreviousCheckSuccessful == false)
                 {
-                    _targetVolume--;
-                    _targetVolume = Mathf.Abs(_targetVolume);
-
-                    StartCoroutine(nameof(SmoothVolumeIncrease));
+                    if (_audio.volume == 0)
+                    {
+                        StopCoroutine(nameof(SmoothVolumeAttenuation));
+                        StartCoroutine(nameof(SmoothVolumeIncrease));
+                    }
+                    else 
+                    {
+                        StopCoroutine(nameof(SmoothVolumeIncrease));
+                        StartCoroutine(nameof(SmoothVolumeAttenuation));
+                    }
                     _wasPreviousCheckSuccessful = true;
                 }
             }
@@ -52,14 +57,32 @@ public class AlarmSystem : MonoBehaviour
     {
         float elapsedTime = 0f;
         float startVolume = _audio.volume;
+        float targetVolume = 1;
 
-        while (_audio.volume != _targetVolume)
+        while (_audio.volume != targetVolume)
         {
             float normalizedPosition = elapsedTime / _timeOfTransition;
 
             elapsedTime += Time.deltaTime;
-            _audio.volume = Mathf.Lerp(startVolume, _targetVolume, normalizedPosition);
+            _audio.volume = Mathf.Lerp(startVolume, 1, normalizedPosition);
 
+            yield return null;
+        }
+    }
+
+    private IEnumerator SmoothVolumeAttenuation()
+    {
+        float elapsedTime = 0f;
+        float startVolume = _audio.volume;
+        float targetVolume = 0;
+
+        while (_audio.volume != targetVolume)
+        {
+            float normalizedPosition = elapsedTime / _timeOfTransition;
+
+            elapsedTime += Time.deltaTime;
+            _audio.volume = Mathf.Lerp(startVolume, targetVolume, normalizedPosition);
+            
             yield return null;
         }
     }

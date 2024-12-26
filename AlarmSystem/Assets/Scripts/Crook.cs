@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Crook : MonoBehaviour
@@ -23,17 +21,13 @@ public class Crook : MonoBehaviour
         }
         else 
         {
-            UpdatingDirection();
+            UpdateDirection();
         }
     }
 
-    private void UpdatingDirection() 
+    private void UpdateDirection() 
     {
-        if (_currentIndexPoint + 1 == _controlPoints.Length)
-        {
-            return;
-        }
-        else 
+        if (_currentIndexPoint < _controlPoints.Length - 1)
         {
             _currentIndexPoint++;
             _currentcontrolPoint = _controlPoints[_currentIndexPoint];
