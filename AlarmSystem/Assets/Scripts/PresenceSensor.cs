@@ -1,17 +1,19 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class DistanceDetector : MonoBehaviour
+public class PresenceSensor: MonoBehaviour
 {
-    public event UnityAction<bool> CrookBeenFound;
+    public event Action CrookBeenFound;
+    public event Action CrookBeenLost;
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.gameObject.TryGetComponent(out Crook crook) == true)
         {
-            CrookBeenFound.Invoke(true);
+            CrookBeenFound.Invoke();
         }
     }
 
@@ -19,7 +21,7 @@ public class DistanceDetector : MonoBehaviour
     {
         if (collision.gameObject.TryGetComponent(out Crook crook) == true)
         {
-            CrookBeenFound.Invoke(false);
+            CrookBeenLost.Invoke();
         }
     }
 }
